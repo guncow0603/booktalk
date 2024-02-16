@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="ie=edge" http-equiv="X-UA-Compatible">
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+
+  <!-- Bootstrap core CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+  <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"
+          integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g="
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+  <title>Review Bulletin Board</title>
+  <script src="/js/basic.js"></script>
+  <style>
+    .nav-item button {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <header
+      class="d-flex flex-wrap align-items-center justify-content-between py-3 mb-4 border-bottom">
+    <div class="col-md-3 mb-2 mb-md-0">
+      <a class="d-inline-flex link-body-emphasis text-decoration-none" href="/booktalk">
+        <svg class="bi" width="60" height="32" role="img" aria-label="Bootstrap">
+          <div class="image-container">
+            <img src="https://booktalk-s3-1.s3.ap-northeast-2.amazonaws.com/7218e908-b9b5-4f58-b5ac-84cbaef6f9e8.png" width="180" height="65" alt="Book Image" />
+          </div>
+        </svg>
+      </a>
+    </div>
+
+    <div class="col-md-6 text-center">
+      <ul class="nav justify-content-center">
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  onclick="myPage()">
+            마이페이지
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  onclick="products()">
+            상품
+          </button>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  id="header-review-list"
+                  onclick="reviews()">
+            리뷰
+          </button>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  id="header-chat-list"
+                  onclick="chatRooms()">
+            채팅방
+          </button>
+        </li>
+        <li class="nav-item"><a href="/booktalk/admin/categories" class="nav-link"
+                                id="admin-page">관리자페이지</a></li>
+      </ul>
+    </div>
+
+    <div class="text-md-end">
+      <div class="d-flex align-items-center">
+        <a href="/booktalk/users/login" type="button" class="btn btn-outline-primary"
+           id="login-button">
+          Login
+        </a>
+        <a href="/booktalk" type="button" class="btn btn-outline-primary"
+           id="logout-button">
+          Logout
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container mt-2 mb-4 text-center ">
+      <form class="d-inline-flex" onsubmit="handleReviewSearchSubmit(event);">
+        <input aria-label="Search" class="form-control me-2" id="searchInput" placeholder="Search"
+               style="width: 500px;"
+               type="search">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="d-flex justify-content-center mt-2 mb-2" id="sorting-options">
+      <div class="form-check mx-1">
+        <input checked class="form-check-input" id="sortByCreatedAt" name="sortingOption"
+               onchange="handleSortingChange()" type="radio" value="createdAt">
+        <label class="form-check-label" for="sortByCreatedAt">
+          최신순
+        </label>
+      </div>
+
+      <div class="form-check mx-1">
+        <input class="form-check-input" id="sortByreviewLikeCnt" name="sortingOption"
+               onchange="handleSortingChange()"
+               type="radio" value="reviewLikeCount">
+        <label class="form-check-label" for="sortByreviewLikeCnt">
+          좋아요순
+        </label>
+      </div>
+
+
+
+    </div>
+    <div class="d-flex justify-content-between mt-2 mb-2">
+      <h2 class="mb-3" id="reviewBoardTitle">리뷰 게시판</h2>
+      <button type="button" class="btn btn-outline-primary" id="toggleReviewsButton" onclick="loadByMeReviews()">
+        내게 작성된 리뷰 보기
+      </button>
+    </div>
+    <div class="mb-3" id="reviewsContainer"></div>
+
+    <div class="collapse" id="createPostForm">
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+  var isMyReviews = false;
+
+
+  const host = 'http://' + window.location.host;
+
+  $(document).ready(function () {
+    handleSearchSubmit();
+
+  });
+
+  function handleSearchSubmit() {
+    // AJAX 요청 수행
+    $.ajax({
+      url: '/api/v2/reviews',
+      method: 'GET',
+      dataType: 'json',
+      success: function (data) {
+        displayReviews(data);
+      },
+      error: function (error) {
+      }
+    });
+  }
+
+  function displayReviews(reviews) {
+    var reviewsContainer = $('#reviewsContainer');
+    reviewsContainer.empty();
+
+    reviews.forEach(function (review) {
+      var reviewHtml =
+          '<div class="review mb-3 p-3 border d-flex justify-content-between align-items-center" ' +
+          'data-review-id="' + review.reviewId + '" onclick="redirectToReviewDetail(this)">' +
+          '<div class="w-50 d-flex flex-column justify-content-center mb-1">' +
+          '<h4 class="mb-0 text-left">' + review.title + '</h4>' +
+          '</div>' +
+          '<div class="d-flex flex-column text-right ms-auto mb-1">' +
+          '<small class="text-muted" style="text-align: right;">Author: ' + review.name + '</small>'
+          +
+          '<small class="text-muted" style="text-align: right;">ID: ' + review.reviewId + '</small>'
+          +
+          '<small class="text-muted" style="text-align: right;">Like: ' + review.reviewLike
+          + '</small>' +
+          '</div>' +
+          '</div>';
+
+      reviewsContainer.append(reviewHtml);
+    });
+  }
+
+  function redirectToReviewDetail(element) {
+    var reviewId = $(element).data('review-id');
+    window.location.href = host + '/booktalk/reviews/detail/' + reviewId;
+  }
+
+  function handleReviewSearchSubmit(event) {
+    event.preventDefault();
+    var selectedValue = document.querySelector('input[name="sortingOption"]:checked').value;
+    var searchQuery = document.getElementById('searchInput').value;
+
+    $.ajax({
+      type: 'GET',
+      url: `/api/v2/reviews/search`,
+      data: {
+        query: searchQuery,
+        sortBy: selectedValue
+      },
+    })
+    .done(function (res) {
+      displayReviews(res, searchQuery);
+    })
+    .fail(function (res) {
+      const jsonObject = JSON.parse(res.responseText);
+      const messages = jsonObject.messages;
+      alert(messages);
+    });
+  }
+
+  function handleSortingChange() {
+    var selectedValue = document.querySelector('input[name="sortingOption"]:checked').value;
+
+    if (isMyReviews) {
+      // "내게 작성된 리뷰 보기"가 활성화된 경우 선택한 옵션으로 정렬된 리뷰를 로드
+      $.ajax({
+        type: 'GET',
+        url: `/api/v2/reviews/byme`,
+        data: {
+          sortBy: selectedValue
+        },
+      })
+              .done(function (res) {
+                displayReviews(res);
+              })
+              .fail(function (res) {
+                const jsonObject = JSON.parse(res.responseText);
+                const messages = jsonObject.messages;
+                alert(messages);
+              });
+    } else {
+      // 그렇지 않으면 선택한 옵션으로 모든 리뷰를 로드
+      $.ajax({
+        type: 'GET',
+        url: `/api/v2/reviews`,
+        data: {
+          sortBy: selectedValue
+        },
+      })
+              .done(function (res) {
+                displayReviews(res);
+              })
+              .fail(function (res) {
+                const jsonObject = JSON.parse(res.responseText);
+                const messages = jsonObject.messages;
+                alert(messages);
+              });
+    }
+  }
+
+  function loadByMeReviews() {
+    var selectedValue = document.querySelector('input[name="sortingOption"]:checked').value;
+
+    if (isMyReviews) {
+      // 모든 리뷰를 표시하도록 토글
+      $.ajax({
+        type: 'GET',
+        url: `/api/v2/reviews`,
+        data: {
+          sortBy: selectedValue
+        },
+      })
+              .done(function (res) {
+                displayReviews(res);
+                isMyReviews = false;
+                updateToggleButton();
+              })
+              .fail(function (res) {
+                const jsonObject = JSON.parse(res.responseText);
+                const messages = jsonObject.messages;
+                alert(messages);
+              });
+    } else {
+      // 현재 사용자의 리뷰를 표시하도록 토글
+      $.ajax({
+        type: 'GET',
+        url: `/api/v2/reviews/byme`,
+        data: {
+          sortBy: selectedValue
+        },
+      })
+              .done(function (res) {
+                displayReviews(res);
+                isMyReviews = true;
+                updateToggleButton();
+              })
+              .fail(function (res) {
+                const jsonObject = JSON.parse(res.responseText);
+                const messages = jsonObject.messages;
+                alert(messages);
+              });
+    }
+  }
+
+  function updateToggleButton() {
+    var toggleButton = document.getElementById('toggleReviewsButton');
+    toggleButton.textContent = isMyReviews ? '전체 리뷰 보기' : '내게 작성된 리뷰 보기';
+  }
+
+</script>
+
+</body>
+
+</html>

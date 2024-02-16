@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+  <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"
+          integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g="
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+  <script src="/js/basic.js"></script>
+  <style>
+    .banner-container {
+      position: relative;
+      max-width: 1000px;
+      max-height: 220px;
+      margin: auto;
+      overflow: hidden;
+    }
+
+    .banner-slides {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    .banner-slide {
+      min-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .active {
+      opacity: 1;
+    }
+
+    button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    #prevSlide {
+      left: 10px;
+    }
+
+    #nextSlide {
+      right: 10px;
+    }
+
+    #indicators {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: row; /* 수정: 수평으로 나열 */
+    }
+
+    #indicators li {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: rgb(128, 128, 128);
+      margin: 0 5px;
+      cursor: pointer;
+    }
+
+    #indicators li.active {
+      background-color: rgb(128, 128, 128); /* 활성화된 인디케이터 스타일 */
+    }
+
+    .nav-item button {
+      margin-right: 10px;
+    }
+
+    .card-img-top {
+      width: auto;
+      height: 350px;
+      display: block;
+
+    }
+    
+
+    .card {
+      width: 80%;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+
+<div class="container">
+  <header
+      class="d-flex flex-wrap align-items-center justify-content-between py-3 mb-4 border-bottom">
+    <div class="col-md-3 mb-2 mb-md-0">
+      <a href="/booktalk" class="d-inline-flex link-body-emphasis text-decoration-none">
+        <svg class="bi" width="60" height="32" role="img" aria-label="Bootstrap">
+          <div class="image-container">
+            <img
+                src="https://booktalk-s3-1.s3.ap-northeast-2.amazonaws.com/7218e908-b9b5-4f58-b5ac-84cbaef6f9e8.png"
+                width="180" height="65" alt="Book Image"/>
+          </div>
+        </svg>
+      </a>
+    </div>
+
+    <div class="col-md-6 text-center">
+      <ul class="nav justify-content-center">
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  onclick="myPage()">
+            마이페이지
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  onclick="products()">
+            상품
+          </button>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  id="header-review-list"
+                  onclick="reviews()">
+            리뷰
+          </button>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  id="header-chat-list"
+                  onclick="chatRooms()">
+            채팅방
+          </button>
+        </li>
+        <li class="nav-item"><a href="/booktalk/admin/categories" class="nav-link"
+                                id="admin-page">관리자페이지</a></li>
+      </ul>
+    </div>
+
+    <div class="text-md-end">
+      <div class="d-flex align-items-center">
+        <a href="/booktalk/users/login" type="button" class="btn btn-outline-primary"
+           id="login-button">
+          Login
+        </a>
+        <a href="/booktalk" type="button" class="btn btn-outline-primary"
+           id="logout-button">
+          Logout
+        </a>
+      </div>
+    </div>
+  </header>
+</div>
+<div class="banner-container">
+  <div class="banner-slides">
+    <div class="banner-slide active"><img
+        src="https://booktalk-s3-1.s3.ap-northeast-2.amazonaws.com/f54c3491-e543-492f-a1a5-0db2ef4214fb.png"
+        alt="Banner 1"></div>
+    <div class="banner-slide"><img
+        src="https://booktalk-s3-1.s3.ap-northeast-2.amazonaws.com/473fa577-2f32-44b8-bba8-c888d3c59a9f.png"
+        alt="Banner 2">
+    </div>
+    <div class="banner-slide"><img
+        src="https://booktalk-s3-1.s3.ap-northeast-2.amazonaws.com/9576aee6-de8d-4cc4-a82c-3dc586f8ac00.png"
+        alt="Banner 3"></div>
+  </div>
+
+
+  <!-- 이전/다음 버튼 -->
+  <button id="prevSlide">‹</button>
+  <button id="nextSlide">›</button>
+
+  <ul id="indicators" class="mt-2 d-flex justify-content-center"></ul>
+</div>
+
+<!-- Used items list -->
+<div class="container mt-2 mb-2">
+
+  <h2 class="text-top mb-2">현재 인기 상품!</h2>
+
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-2" id="main-product-page">
+
+  </div>
+
+  <footer class="text-muted py-5">
+    <div class="container">
+      <p class="float-end mb-1">
+        <a href="#">Back to top</a>
+      </p>
+      <p class="mb-1">© Bootstrap</p>
+      <p class="mb-0">New to Bootstrap? <a href="https://getbootstrap.kr/docs/5.1/examples/">Visit
+        the homepage</a></p>
+    </div>
+  </footer>
+
+</div>
+
+
+<!-- Bootstrap JS and other scripts can be included here -->
+<script>
+  const host = 'http://' + window.location.host;
+
+  $(document).ready(function () {
+    $.ajax({
+      type: 'GET',
+      url: `/api/v2/products/main`,
+    })
+    .done(function (res) {
+      $('#main-product-page').empty();
+      res.forEach(function (product) {
+        renderMainProduct(product);
+      })
+
+    })
+    .fail(function (jqXHR, textStatus) {
+      alert('알수없는 오류가 발생했습니다.');
+    });
+
+  });
+
+  function renderMainProduct(product) {
+    var currentElement = document.getElementById('main-product-page');
+    var colDiv = document.createElement('div');
+    colDiv.className = 'col';
+
+    // card 엘리먼트 생성
+    var cardDiv = document.createElement('div');
+    cardDiv.className = 'card shadow-sm';
+
+    // 이미지 엘리먼트 생성
+    var imageElement = document.createElement('img');
+    if (product.imageListRes.imagePathUrl) {
+      imageElement.src = product.imageListRes.imagePathUrl;
+    } else {
+      imageElement.src = "https://via.placeholder.com/150";
+    }
+
+    imageElement.addEventListener('click', function() {
+      window.location.href = '/booktalk/products/detail/' + product.id;
+    });
+    imageElement.style.cursor = 'pointer';
+
+    imageElement.className = 'card-img-top';
+    imageElement.alt = 'Item Image';
+
+    // card-body 엘리먼트 생성
+    var cardBodyDiv = document.createElement('div');
+    cardBodyDiv.className = 'card-body';
+
+    // card-title 엘리먼트 생성
+    var cardTitle = document.createElement('h3');
+    cardTitle.className = 'card-title';
+    cardTitle.id = 'product-name' + product.id;
+    cardTitle.textContent = product.name;
+
+    // card-text 엘리먼트 생성
+    var cardTextP = document.createElement('p');
+    cardTextP.className = 'card-price';
+    cardTextP.textContent = product.price + '원';
+
+    // d-flex 엘리먼트 생성
+    var dFlexDiv = document.createElement('div');
+    dFlexDiv.className = 'd-flex justify-content-between align-items-center';
+// btn-group 엘리먼트 생성
+    var btnGroupDiv = document.createElement('div');
+    btnGroupDiv.className = 'btn-group';
+    // 버튼 엘리먼트 생성
+    var buttonElement = document.createElement('a');
+    buttonElement.href = '/booktalk/products/detail/' + product.id;
+    buttonElement.className = 'btn btn-outline-secondary'; // 부트스트랩 버튼 클래스 추가
+    buttonElement.textContent = '자세히보기';
+
+    // small 엘리먼트 생성
+    var smallLikesElement = document.createElement('small');
+    smallLikesElement.className = 'text-body-secondary';
+    smallLikesElement.textContent = '관심 ' + product.productLikes + '개';
+
+    btnGroupDiv.appendChild(buttonElement);
+    dFlexDiv.appendChild(btnGroupDiv);
+    dFlexDiv.appendChild(smallLikesElement);
+
+    cardBodyDiv.appendChild(cardTitle)
+    cardBodyDiv.appendChild(cardTextP);
+    cardBodyDiv.appendChild(dFlexDiv);
+    cardDiv.appendChild(imageElement);
+    cardDiv.appendChild(cardBodyDiv);
+    colDiv.appendChild(cardDiv);
+    currentElement.appendChild(colDiv);
+
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const prevButton = document.getElementById('prevSlide');
+    const nextButton = document.getElementById('nextSlide');
+    const slidesContainer = document.querySelector('.banner-slides');
+    const slides = document.querySelectorAll('.banner-slide');
+    const indicatorsContainer = document.getElementById('indicators');
+
+    let currentIndex = 0;
+    let intervalId;
+
+    // Create indicators
+    slides.forEach((_, index) => {
+      const indicator = document.createElement('li');
+      indicator.addEventListener('click', () => showSlide(index));
+      indicatorsContainer.appendChild(indicator);
+    });
+
+    const indicators = Array.from(indicatorsContainer.children);
+
+    // Show initial slide
+    showSlide(currentIndex);
+
+    // Event listeners for next and previous buttons
+    nextButton.addEventListener('click', () => {
+      currentIndex = (currentIndex + 1) % slides.length;
+      showSlide(currentIndex);
+    });
+
+    prevButton.addEventListener('click', () => {
+      currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+      showSlide(currentIndex);
+    });
+
+    // Function to show a specific slide
+    function showSlide(index) {
+      slidesContainer.style.transform = `translateX(-${index * 100}%)`;
+
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === index);
+        indicators[i].classList.toggle('active', i === index);
+      });
+
+      clearInterval(intervalId); // 이전 인터벌 제거
+      // 일정 시간마다 자동으로 다음 슬라이드로 전환
+      intervalId = setInterval(() => {
+        currentIndex = (currentIndex + 1) % slides.length;
+        showSlide(currentIndex);
+      }, 5000); // 5000ms(5초)마다 전환
+    }
+  });
+
+</script>
+</body>
+
+</html>

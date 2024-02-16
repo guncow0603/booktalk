@@ -16,6 +16,7 @@ public class UserDetailsImpl implements UserDetails {
     @Getter
     private final User user;
 
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         UserRoleType role = user.getRole();
@@ -35,7 +36,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getUsername() {
-        return null;
+        return this.user.getNickname();
     }
 
     @Override

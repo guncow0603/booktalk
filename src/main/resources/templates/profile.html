@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="ie=edge" http-equiv="X-UA-Compatible">
+  <title>프로필 조회</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+  <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script crossorigin="anonymous"
+          integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g="
+          src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+  <script src="/js/basic.js"></script>
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .container {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    h2 {
+      color: #007bff;
+    }
+
+    .profile-item {
+      padding: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    #imagePreview {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .btn-primary, .btn-secondary {
+      border: 2px solid;
+    }
+
+    .card-img-top {
+      width: 300px;
+      height: auto;
+      display: block;
+
+    }
+
+    .nav-item button {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header
+      class="d-flex flex-wrap align-items-center justify-content-between py-3 mb-4 border-bottom">
+    <div class="col-md-3 mb-2 mb-md-0">
+      <a class="d-inline-flex link-body-emphasis text-decoration-none" href="/booktalk">
+        <svg class="bi" width="60" height="32" role="img" aria-label="Bootstrap">
+          <div class="image-container">
+            <img
+                src="https://booktalk-s3-1.s3.ap-northeast-2.amazonaws.com/7218e908-b9b5-4f58-b5ac-84cbaef6f9e8.png"
+                width="180" height="65" alt="Book Image"/>
+          </div>
+        </svg>
+      </a>
+    </div>
+
+    <div class="col-md-6 text-center">
+      <ul class="nav justify-content-center">
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  onclick="myPage()">
+            마이페이지
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  onclick="products()">
+            상품
+          </button>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  id="header-review-list"
+                  onclick="reviews()">
+            리뷰
+          </button>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  id="header-chat-list"
+                  onclick="chatRooms()">
+            채팅방
+          </button>
+        </li>
+        <li class="nav-item"><a href="/booktalk/admin/categories" class="nav-link"
+                                id="admin-page">관리자페이지</a></li>
+      </ul>
+    </div>
+
+    <div class="text-md-end">
+      <div class="d-flex align-items-center">
+        <a class="btn btn-outline-primary" href="/booktalk/users/login" id="login-button"
+           type="button">
+          Login
+        </a>
+        <a class="btn btn-outline-primary" href="/booktalk" id="logout-button"
+           type="button">
+          Logout
+        </a>
+      </div>
+    </div>
+  </header>
+</div>
+
+<div class="container mt-4 d-flex flex-column">
+  <h2 class="mb-4">프로필 조회</h2>
+  <small id="userId" style="visibility: hidden;"></small>
+  <div class="profile-item row">
+    <div class="col-sm-3 fw-bold">프로필 이미지</div>
+    <div class="col-sm-8" id="image-container">
+    </div>
+    <div class="my-2 row" id="upload-container">
+      <!--      <div class="col-sm-3 fw-bold">이미지 업로드</div>-->
+      <!--      <div class="col-sm-9" id="profile-image">gd</div>-->
+    </div>
+  </div>
+  <div class="profile-item row">
+    <div class="col-sm-3 fw-bold">사용자 평점</div>
+    <div class="col-sm-9" id="profile-scroe"></div>
+  </div>
+
+  <div class="profile-item row">
+    <div class="col-sm-3 fw-bold">이메일</div>
+    <div class="col-sm-9" id="profile-email">user@example.com</div>
+  </div>
+
+  <div class="profile-item row">
+    <div class="col-sm-3 fw-bold">닉네임</div>
+    <div class="col-sm-9" id="profile-nickname">사용자 닉네임</div>
+  </div>
+
+  <div class="profile-item row">
+    <div class="col-sm-3 fw-bold">프로필 설명</div>
+    <div class="col-sm-9" id="profile-description">사용자의 프로필 설명이 여기에 들어갑니다.</div>
+  </div>
+
+  <div class="profile-item row">
+    <div class="col-sm-3 fw-bold">주소</div>
+    <div class="col-sm-9" id="profile-address">사용자 주소</div>
+  </div>
+
+  <div class="profile-item row">
+    <div class="col-sm-3 fw-bold">전화번호</div>
+    <div class="col-sm-9" id="profile-phone">010-xxxx-xxxx</div>
+  </div>
+
+
+  <div class="profile-item mt-4">
+    <button class="btn btn-outline-primary" id="passwordEditButton"
+            onclick="openNewPasswordModal()">비밀번호 수정
+    </button>
+    <button class="btn btn-outline-primary" id="profileEditButton"
+            onclick="inputEdit()">프로필 수정
+    </button>
+
+    <a href="/booktalk" class="btn btn-primary">메인 페이지로 돌아가기</a>
+
+    <a href="/booktalk/LikedProducts" class="btn btn-primary">관심 상품 목록</a>
+
+    <a href="/booktalk/myTrade" class="btn btn-primary">나의 거래 내역</a>
+
+    <button class="btn btn-danger" style="float: right" onclick="quitMember()">회원 탈퇴하기</button>
+
+  </div>
+  
+  <div class="modal" id="newPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">새 비밀번호 입력</h5>
+          <button aria-label="Close" class="btn-close" data-bs-dismiss="modal"
+                  onclick="resetPWModal()"
+                  type="button"></button>
+        </div>
+        <div class="modal-body">
+          <input class="form-control mb-2" id="beforePasswordInput" placeholder="기존 비밀번호"
+                 type="password">
+          <input class="form-control mb-2" id="newPasswordInput" placeholder="새로운 비밀번호"
+                 type="password">
+          <input class="form-control mb-2" id="newPasswordInputCheck" placeholder="새로운 비밀번호 확인"
+                 type="password">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal" onclick="resetPWModal()"
+                  type="button">닫기
+          </button>
+          <button class="btn btn-primary" onclick="editPW()" type="button">비밀번호 수정 완료
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+  // 프로필 설명을 수정 가능한 입력 상자로 변경하는 함수
+
+  $(document).ready(function () {
+    $.ajax({
+      type: 'GET',
+      url: `/api/v2/users`,
+    })
+    .done(function (res) {
+      $('#profile-scroe').text(res.score);
+      $('#profile-email').text(res.email);
+      $('#profile-nickname').text(res.nickname);
+      $('#profile-description').text(res.description)
+      $('#profile-address').text(res.location);
+      $('#profile-phone').text(res.phone);
+      $('#userId').text(res.id);
+
+      var imageContainer = document.getElementById('image-container')
+      const img = document.createElement('img');
+      img.className = 'card-img-top mx-2';
+      img.alt = 'Product Image';
+      if (res.profileImagePathUrl) {
+        img.src = res.profileImagePathUrl;
+
+      } else {
+        img.src = 'https://via.placeholder.com/150';
+      }
+
+      imageContainer.appendChild(img);
+
+    })
+    .fail(function (res) {
+      const jsonObject = JSON.parse(res.responseText);
+      const messages = jsonObject.messages;
+      alert(messages);
+    });
+
+  });
+
+  function editProfile(elementId) {
+    var currentElement = document.getElementById(elementId);
+    // 현재 텍스트 내용 저장
+    var currentDescription = currentElement.innerText;
+    // 수정 가능한 입력 상자로 교체
+    var newTextarea = document.createElement('textarea');
+    newTextarea.setAttribute('class', 'form-control');
+    newTextarea.setAttribute('rows', '2');
+    newTextarea.innerText = currentDescription;
+    currentElement.innerHTML = '';
+    currentElement.appendChild(newTextarea);
+  }
+
+  function openPasswordInput() {
+    // 비밀번호 입력 모달 열기
+    //$('#passwordInputCheck').hide();
+    $('#passwordModal').modal('show');
+  }
+
+  function inputEdit() {
+    //$('#passwordModal').modal('hide');
+    // <div className="col-sm-3 fw-bold">이미지 업로드</div>
+    // <div className="col-sm-9" id="profile-image">gd</div>
+    //
+    //업로드 요소 추가
+    var parentDiv = document.getElementById("upload-container");
+
+// 레이블 요소 생성
+    var label = document.createElement("div");
+    label.className = "col-sm-3 fw-bold";
+    label.textContent = "프로필 이미지 업로드";
+
+    var uploadContainer = document.createElement("div")
+    uploadContainer.className = "col-sm-9"
+    uploadContainer.id = "profile-image";
+
+// 파일 입력 요소 생성
+    var input = document.createElement("input");
+    input.type = "file";
+    input.className = "form-control";
+    input.id = "productImage";
+    input.accept = "image/*";
+    input.addEventListener("change", previewImage);
+
+// 부모 요소에 자식 요소 추가
+    uploadContainer.appendChild(input);
+    parentDiv.appendChild(label);
+    parentDiv.appendChild(uploadContainer);
+
+    editProfile('profile-nickname');
+    editProfile('profile-phone');
+    editProfile('profile-address');
+    editProfile('profile-description');
+    document.getElementById('profileEditButton').innerHTML = '수정하기';
+    document.getElementById('profileEditButton').onclick = editUser;
+  }
+
+  function editUser() {
+    const userId = $('#userId').text();
+
+    var input = document.getElementById('productImage');
+
+    // 이미지가 선택되었는지 확인
+    if (input.files.length === 0) {
+      // 이미지를 선택하지 않았을 때 알림창 표시
+      var confirmResult = confirm('이미지를 선택하지 않았습니다. 그래도 수정하시겠습니까?');
+      if (!confirmResult) {
+        // 사용자가 취소를 선택한 경우 아무 일도 하지 않고 함수 종료
+        return;
+      }
+    }
+
+    var formData = new FormData();
+    for (var i = 0; i < input.files.length; i++) {
+      formData.append('upload', input.files[i]);
+    }
+
+    const req = {
+      nickname: $('#profile-nickname textarea').val(),
+      location: $('#profile-address textarea').val(),
+      description: $('#profile-description textarea ').val(),
+      phone: $('#profile-phone textarea').val()
+    };
+
+    const json = JSON.stringify(req);
+    const blob = new Blob([json], {type: "application/json"});
+    formData.append("req", blob);
+
+    $.ajax({
+      type: "PUT",
+      url: `/api/v2/users/` + userId,
+      data: formData,		// 필수
+      processData: false,	// 필수
+      contentType: false,	// 필수
+    })
+    .done(function (res) {
+      alert('프로필 수정완료');
+      location.reload();
+
+    })
+    .fail(function (res) {
+      const jsonObject = JSON.parse(res.responseText);
+      const messages = jsonObject.messages;
+      alert(messages);
+    });
+
+  }
+
+  function previewImage() {
+    var imageContainer = document.getElementById('image-container');
+    $('#image-container').empty();
+    const img = document.createElement('img');
+    img.className = 'card-img-top mx-2';
+    img.id = 'imagePreview'
+    img.alt = 'Product Image';
+    imageContainer.appendChild(img);
+    var input = document.getElementById('productImage');
+    var preview = document.getElementById('imagePreview');
+    var file = input.files[0];
+    var reader = new FileReader();
+
+    var files = input.files;
+
+    reader.onloadend = function () {
+      preview.src = reader.result;
+    }
+
+    if (file) {
+      reader.readAsDataURL(file);
+    } else {
+      preview.src = "";
+    }
+  }
+
+  function quitMember() {
+    const confirmed = confirm("정말로 탈퇴하시겠습니까?");
+
+    if (!confirmed) {
+
+      return;
+    }
+
+    $.ajax({
+      type: 'PUT',
+      url: `/api/v2/users/withdraw`,
+      contentType: "application/json",
+    })
+    .done(function (res) {
+      document.cookie = "RefreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "AccessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.location.href = 'http://' + window.location.host + '/booktalk'
+    })
+    .fail(function (res) {
+      resetModal();
+      const jsonObject = JSON.parse(res.responseText);
+      const messages = jsonObject.messages;
+      alert(messages);
+    });
+  }
+
+  function resetModal() { //모달창 초기화
+    // 모달 내의 입력 필드 초기화
+    $('#passwordInput').val('');
+    $('#passwordInputCheck').val('');
+  }
+
+  function openNewPasswordModal() {
+    $('#newPasswordModal').modal('show');
+  }
+
+  function resetPWModal() {
+    $('#beforePasswordInput').val('');
+    $('#newPasswordInput').val('');
+    $('#newPasswordInputCheck').val('');
+  }
+
+  function editPW() {
+    const userId = $('#userId').text();
+    const data = {
+      "password": $('#beforePasswordInput').val(),
+      "newPassword": $('#newPasswordInput').val(),
+      "newPasswordCheck": $('#newPasswordInputCheck').val()
+    }
+    const beforePassword = $('#beforePasswordInput').val();
+    if (beforePassword) {
+      $.ajax({
+        type: 'PUT',
+        url: `/api/v2/users/password/` + userId,
+        contentType: "application/json",
+        data: JSON.stringify(data)
+      })
+      .done(function (res) {
+        window.location.href = 'http://' + window.location.host + '/booktalk/users/profile'
+        alert('비밀번호 수정완료!')
+      })
+      .fail(function (res) {
+        resetPWModal();
+        const jsonObject = JSON.parse(res.responseText);
+        const messages = jsonObject.messages;
+        alert(messages);
+      });
+    } else {
+      alert('비밀번호를 입력하세요');
+    }
+  }
+
+</script>
+
+</body>
+
+
+</html>

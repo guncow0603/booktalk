@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+  <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"
+          integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g="
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+  <script src="/js/basic.js"></script>
+</head>
+
+<style>
+  body {
+    background-color: #f8f9fa;
+  }
+
+  #chatRoomList {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+
+  .chat-room-card {
+    width: 25rem;
+    margin: 15px; /* 카드 간격을 조절합니다. */
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 효과를 추가합니다. */
+  }
+
+  .chat-room-card:hover {
+    transform: scale(1.05);
+  }
+
+  .card-body {
+    background-color: #ffffff;
+    padding: 20px;
+  }
+
+  .card-title {
+    color: #343a40;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+  }
+
+  .message-container {
+    text-align: center;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f8f8f8;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .message {
+    font-size: 18px;
+    color: #555;
+  }
+
+
+  .nav-item button {
+    margin-right: 10px;
+  }
+</style>
+
+<body>
+
+<div class="container">
+  <header
+      class="d-flex flex-wrap align-items-center justify-content-between py-3 mb-4 border-bottom">
+    <div class="col-md-3 mb-2 mb-md-0">
+      <a href="/booktalk" class="d-inline-flex link-body-emphasis text-decoration-none">
+        <svg class="bi" width="60" height="32" role="img" aria-label="Bootstrap">
+          <div class="image-container">
+            <img
+                src="https://booktalk-s3-1.s3.ap-northeast-2.amazonaws.com/7218e908-b9b5-4f58-b5ac-84cbaef6f9e8.png"
+                width="180" height="65" alt="Book Image"/>
+          </div>
+        </svg>
+      </a>
+    </div>
+
+    <div class="col-md-6 text-center">
+      <ul class="nav justify-content-center">
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  onclick="myPage()">
+            마이페이지
+          </button>
+        </li>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  onclick="products()">
+            상품
+          </button>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  id="header-review-list"
+                  onclick="reviews()">
+            리뷰
+          </button>
+        <li class="nav-item">
+          <button type="button" class="btn btn-outline-primary position-relative"
+                  id="header-chat-list"
+                  onclick="chatRooms()">
+            채팅방
+          </button>
+        </li>
+        <li class="nav-item"><a href="/booktalk/admin/categories" class="nav-link"
+                                id="admin-page">관리자페이지</a></li>
+      </ul>
+    </div>
+
+    <div class="text-md-end">
+      <div class="d-flex align-items-center">
+        <a href="/booktalk/users/login" type="button" class="btn btn-outline-primary"
+           id="login-button">
+          Login
+        </a>
+        <a href="/booktalk" type="button" class="btn btn-outline-primary"
+           id="logout-button">
+          Logout
+        </a>
+      </div>
+    </div>
+  </header>
+</div>
+
+<div class="container">
+  <div id="chatRoomList" class="d-flex flex-wrap justify-content-around">
+    <div class="card chat-room-card">
+    </div>
+
+  </div>
+</div>
+
+
+<script th:inline="javascript">
+  const host = 'http://' + window.location.host;
+  const userId = /*[[${userId}]]*/
+
+
+      $(document).ready(function () {
+
+        $('#header-chat-list').empty(); // 알림표시 제거
+        $('#header-chat-list').text('채팅방');
+
+        $.ajax({
+          type: 'GET',
+          url: `/api/v2/chatRooms`,
+        })
+        .done(function (res) {
+          $('#chatRoomList').empty();
+          renderChatRoomList(res);
+
+        })
+        .fail(function (res) {
+          const jsonObject = JSON.parse(res.responseText);
+          const messages = jsonObject.messages;
+          alert(messages);
+        });
+
+      });
+
+  function renderChatRoomList(chatRoomList) {
+
+    var roomListContainer = document.getElementById('chatRoomList');
+    if (chatRoomList.length !== 0) {
+      chatRoomList.forEach(function (chatRoom) {
+
+        // 새로운 채팅방 카드 생성
+        const chatRoomCard = document.createElement('div');
+        chatRoomCard.className = 'card chat-room-card';
+
+        // 채팅방 카드의 내용 생성
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body';
+
+// 채팅방 제목 생성
+        const cardTitle = document.createElement('h5');
+        cardTitle.className = 'card-title';
+        cardTitle.textContent = chatRoom.id + '번 채팅방';
+        cardTitle.textContent = chatRoom.sender + '와' + chatRoom.receiver + '의 채팅방';
+
+// 채팅방 입장 버튼 생성
+        const enterButton = document.createElement('a');
+        enterButton.href = '/booktalk/chats/rooms/' + chatRoom.id + '/front';
+        enterButton.className = 'btn btn-primary';
+        enterButton.innerHTML = '<i class="fas fa-comments"></i> 채팅방 입장';
+
+        const outButton = document.createElement('button');
+        outButton.textContent = '채팅방 종료'
+        outButton.className = 'btn btn-danger';
+        outButton.style.float = 'right';
+        outButton.addEventListener("click", function () {
+          // 클로저 내에서 buttonClickHandler 함수를 호출하면서 인자를 전달합니다.
+          removeRoom(chatRoom.id);
+        });
+
+// 버튼을 카드의 내용에 추가
+        cardBody.appendChild(cardTitle);
+        cardBody.appendChild(enterButton);
+        cardBody.appendChild(outButton);
+
+// 내용을 카드에 추가
+        chatRoomCard.appendChild(cardBody);
+// 카드를 부모 요소에 추가
+        roomListContainer.appendChild(chatRoomCard);
+
+      })
+    } else {
+      var messageContainer = document.createElement('div');
+      messageContainer.classList.add('message-container');
+
+      var messageParagraph = document.createElement('p');
+      messageParagraph.classList.add('message');
+      messageParagraph.textContent = '현재 사용 중인 채팅방이 없습니다.';
+
+      // 생성한 요소를 문서에 추가
+      messageContainer.appendChild(messageParagraph);
+      roomListContainer.appendChild(messageContainer);
+    }
+
+  }
+
+  function removeRoom(id) {
+
+    $.ajax({
+      type: "DELETE",
+      url: `/api/v2/chatRooms/` + id,
+    })
+    .done(function (res) {
+      window.location.href = host + '/booktalk';
+    })
+    .fail(function (res) {
+      alert('전송실패');
+      const jsonObject = JSON.parse(res.responseText);
+      const messages = jsonObject.messages;
+      alert(messages);
+
+    });
+
+  }
+
+</script>
+
+</body>
+
+</html>
